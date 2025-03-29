@@ -1,95 +1,146 @@
 package code;
 
+import image.APImage;
 import image.Pixel;
 
 public class ImageManipulation {
 
-    /** CHALLENGE 0: Display Image
-     *  Write a statement that will display the image in a window
-     */
+    //CHALLENGE 0: Display Image
+
     public static void main(String[] args) {
+        String imagePath = "cyberpunk2077.jpg";
 
+        // Original
+        new APImage(imagePath).draw();
 
+        // Transformed versions
+        grayScale(imagePath);
+        blackAndWhite(imagePath);
+        edgeDetection(imagePath, 20);
+        reflectImage(imagePath);
+        rotateImage(imagePath);
     }
 
-    /** CHALLENGE ONE: Grayscale
-     *
-     * INPUT: the complete path file name of the image
-     * OUTPUT: a grayscale copy of the image
-     *
-     * To convert a colour image to grayscale, we need to visit every pixel in the image ...
-     * Calculate the average of the red, green, and blue components of the pixel.
-     * Set the red, green, and blue components to this average value. */
+     //CHALLENGE ONE: Grayscale
     public static void grayScale(String pathOfFile) {
+        APImage image = new APImage(pathOfFile);
+        APImage grayImage = image.clone();
 
+        for (int y = 0; y < grayImage.getHeight(); y++) {
+            for (int x = 0; x < grayImage.getWidth(); x++) {
+                Pixel p = grayImage.getPixel(x, y);
+                int avg = getAverageColour(p);
+                p.setRed(avg);
+                p.setGreen(avg);
+                p.setBlue(avg);
+            }
+        }
+
+        grayImage.draw();
     }
 
-    /** A helper method that can be used to assist you in each challenge.
-     * This method simply calculates the average of the RGB values of a single pixel.
-     * @param pixel
-     * @return the average RGB value
+    /**
+     * Helper method to calculate average RGB value
      */
     private static int getAverageColour(Pixel pixel) {
-        return 0;
+        return (pixel.getRed() + pixel.getGreen() + pixel.getBlue()) / 3;
     }
 
-    /** CHALLENGE TWO: Black and White
-     *
-     * INPUT: the complete path file name of the image
-     * OUTPUT: a black and white copy of the image
-     *
-     * To convert a colour image to black and white, we need to visit every pixel in the image ...
-     * Calculate the average of the red, green, and blue components of the pixel.
-     * If the average is less than 128, set the pixel to black
-     * If the average is equal to or greater than 128, set the pixel to white */
+    /**
+     * CHALLENGE TWO: Black and White
+     */
     public static void blackAndWhite(String pathOfFile) {
+        APImage image = new APImage(pathOfFile);
+        APImage bwImage = image.clone();
 
+        for (int y=0;y<bwImage.getHeight();y++) {
+            for (int x=0;x<bwImage.getWidth();x++) {
+                Pixel p = bwImage.getPixel(x,y);
+                int avg = getAverageColour(p);
+                int newValue;
+                if (avg<128) {
+                    newValue = 0;
+                } else {
+                    newValue = 255;
+                }
+                p.setRed(newValue);
+                p.setGreen(newValue);
+                p.setBlue(newValue);
+            }
+        }
+
+        bwImage.draw();
     }
 
-    /** CHALLENGE Three: Edge Detection
-     *
-     * INPUT: the complete path file name of the image
-     * OUTPUT: an outline of the image. The amount of information will correspond to the threshold.
-     *
-     * Edge detection is an image processing technique for finding the boundaries of objects within images.
-     * It works by detecting discontinuities in brightness. Edge detection is used for image segmentation
-     * and data extraction in areas such as image processing, computer vision, and machine vision.
-     *
-     * There are many different edge detection algorithms. We will use a basic edge detection technique
-     * For each pixel, we will calculate ...
-     * 1. The average colour value of the current pixel
-     * 2. The average colour value of the pixel to the left of the current pixel
-     * 3. The average colour value of the pixel below the current pixel
-     * If the difference between 1. and 2. OR if the difference between 1. and 3. is greater than some threshold value,
-     * we will set the current pixel to black. This is because an absolute difference that is greater than our threshold
-     * value should indicate an edge and thus, we colour the pixel black.
-     * Otherwise, we will set the current pixel to white
-     * NOTE: We want to be able to apply edge detection using various thresholds
-     * For example, we could apply edge detection to an image using a threshold of 20 OR we could apply
-     * edge detection to an image using a threshold of 35
-     *  */
+    /**
+     * CHALLENGE Three: Edge Detection
+     */
     public static void edgeDetection(String pathToFile, int threshold) {
+        APImage image = new APImage(pathToFile);
+        APImage edgeImage = new APImage(image.getWidth(), image.getHeight());
 
+        // make the whole image white
+        for (int y=0;y<edgeImage.getHeight();y++) {
+            for (int x=0;x<edgeImage.getWidth();x++) {
+                Pixel p = edgeImage.getPixel(x,y);
+                p.setRed(255);
+                p.setGreen(255);
+                p.setBlue(255);
+            }
+        }
+
+        //detect edges and draw them as black dots
+        for (int y=0;y<image.getHeight()-1;y++) {
+            for (int x=0;x<image.getWidth()-1;x++) {
+                Pixel current = image.getPixel(x,y);
+                Pixel right = image.getPixel(x+1,y);
+                Pixel below = image.getPixel(x,y+1);
+
+                int currentAvg = getAverageColour(current);
+                int rightAvg = getAverageColour(right);
+                int belowAvg = getAverageColour(below);
+
+                if (Math.abs(currentAvg - rightAvg) > threshold || Math.abs(currentAvg - belowAvg) > threshold) {
+                    edgeImage.getPixel(x, y).setRed(0);
+                    edgeImage.getPixel(x, y).setGreen(0);
+                    edgeImage.getPixel(x, y).setBlue(0);
+                }
+            }
+        }
+
+        edgeImage.draw();
     }
 
-    /** CHALLENGE Four: Reflect Image
-     *
-     * INPUT: the complete path file name of the image
-     * OUTPUT: the image reflected about the y-axis
-     *
+    /**
+     * CHALLENGE Four: Reflect Image
      */
     public static void reflectImage(String pathToFile) {
+        APImage image = new APImage(pathToFile);
+        APImage reflectedImage = new APImage(image.getWidth(), image.getHeight());
 
+        for (int y=0;y<image.getHeight();y++) {
+            for (int x=0;x<image.getWidth();x++) {
+                Pixel p = image.getPixel(x,y);
+                reflectedImage.setPixel(image.getWidth()-1-x,y,p.clone());
+            }
+        }
+
+        reflectedImage.draw();
     }
 
-    /** CHALLENGE Five: Rotate Image
-     *
-     * INPUT: the complete path file name of the image
-     * OUTPUT: the image rotated 90 degrees CLOCKWISE
-     *
-     *  */
+    /**
+     * CHALLENGE Five: Rotate Image
+     */
     public static void rotateImage(String pathToFile) {
+        APImage image = new APImage(pathToFile);
+        APImage rotatedImage = new APImage(image.getHeight(), image.getWidth());
 
+        for (int y=0;y<image.getHeight();y++) {
+            for (int x=0;x<image.getWidth();x++) {
+                Pixel p = image.getPixel(x,y);
+                rotatedImage.setPixel(image.getHeight()-1-y,x,p.clone());
+            }
+        }
+        rotatedImage.draw();
     }
-
 }
